@@ -1,0 +1,95 @@
+//===== rAthena Script =======================================
+//= Card Removal NPC
+//===== By: ==================================================
+//= TyrNemesis^
+//===== Current Version: =====================================
+//= 1.2a
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= Removes cards from equipped items.
+//===== Additional Comments: =================================
+//= 1.0 First version. [TyrNemesis^]
+//= 1.2 Optimized and fixed getequipname menu. [Kisuka]
+//= 1.2a Added 'disable_items' command. [Euphy]
+//============================================================
+
+prt_in,28,73,4	script	Bombur	826,{
+
+	set .zenycost,1000000;    // base cost of the card remover services (in Zeny)
+	set .percardcost,100000;  // cost per card of the card remover services (in Zeny)
+	if ((countitem(2000001)<1)) {
+		mes "[Bombur]";
+		mes "Piss off, kid!";
+		mes "I have no business for the likes of you.";
+		close;
+		}
+	disable_items;
+	mes "[Bombur]";
+	mes "I can disassemble any item you have compounded a card on risk free!";
+	next;
+	switch(select("That's what I came for.:What do you charge?:No thanks.")) {
+	case 1:
+		mes "[Bombur]";
+		mes "Give 'em and I'll smash 'em!";
+		next;
+
+		setarray .@indices[1], EQI_HEAD_TOP, EQI_ARMOR, EQI_HAND_L, EQI_HAND_R, EQI_GARMENT, EQI_SHOES, EQI_ACC_L, EQI_ACC_R, EQI_HEAD_MID, EQI_HEAD_LOW;
+		for( set .@i,1; .@i <= 10; set .@i,.@i+1 ) {
+			if( getequipisequiped(.@indices[.@i]) )
+				set .@menu$, .@menu$ + F_getpositionname(.@indices[.@i]) + "-[" + getequipname(.@indices[.@i]) + "]";
+			set .@menu$, .@menu$ + ":";
+		}
+		set .@part, .@indices[ select(.@menu$) ];
+		if(!getequipisequiped(.@part)) {
+			mes "[Bombur]";
+			mes "Stop fooling around kid, out of my sight!";
+			close;
+		}
+		if(getequipcardcnt(.@part) == 0) {
+			mes "[Bombur]";
+			mes "There aint nothin in this one. Want me to smash your face with it?";
+			close;
+		}
+		set .@cardcount,getequipcardcnt(.@part);
+		
+		if (!checkweight(1202,(.@cardcount+1))) { 
+			mes "^3355FFYou are carrying too much items.";
+			mes "Come back when you're lighter.";
+			close;
+		}
+		mes "[Bombur]";
+		mes "Alright, an item with " + .@cardcount + " card in it.";
+		mes "Move on with the smashin?";
+		next;
+		if(select("Do it!:I changed my mind.") == 2) {
+			mes "[Bombur]";
+			mes "What a wuss.";
+			close;
+		}
+		if((zeny < (.zenycost+(.@cardcount * .percardcost)))) {
+			mes "[Bombur]";
+			mes "Poor bastard. Get lost with your jellopies and don't bother me again!";
+			close;
+		}
+		mes "[Bombur]";
+		mes "Smash 'em to split 'em!";
+		next;
+		mes "Klang! Klang!";
+		set Zeny, Zeny - (.zenycost+(.@cardcount * .percardcost));
+		delitem 2000001,1;
+		next;
+		successremovecards .@part;
+		mes "[Bombur]";
+		mes "Ha! I really am great! Here are your lousy items.";
+		close;
+	case 2:
+		mes "[Bombur]";
+		mes "I charge a flat fee of "+callfunc("F_InsertComma",.zenycost)+" zeny, plus "+callfunc("F_InsertComma",.percardcost)+" zeny for each card I remove from the item. Hey! It's that high because it's risk free!";
+		close;
+	case 3:
+		mes "[Bombur]";
+		mes "Piss off, then!";
+		close;
+	}
+}
